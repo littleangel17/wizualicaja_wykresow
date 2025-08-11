@@ -20,10 +20,13 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.backends._backend_tk import NavigationToolbar2Tk
 
 class DataVisualizerApp:
+    # ... (cała reszta kodu bez zmian, aż do metody load_data_and_plot) ...
+
+    # Resztę kodu zostawiam bez zmian
     def __init__(self, root: tk.Tk):
         self.root = root
         self._setup_logging()
-        self.root.title("THz Data Visualizer v6.4 (Final Logic)")
+        self.root.title("THz Data Visualizer v6.5 (TXT Load Fix)")
         self.root.geometry("1450x900")
 
         self.style = ttk.Style(self.root)
@@ -413,6 +416,7 @@ class DataVisualizerApp:
         self._on_signal_selected(); self.legend_visible_var.set(True)
         if self.show_fft_var.get(): self.show_fft_var.set(False)
         self.toggle_fft_view(initial_clear=True); self.root.update_idletasks()
+
     def load_data_and_plot(self):
         filepaths = filedialog.askopenfilenames(title="Wybierz pliki z danymi", filetypes=(("Pliki tekstowe", "*.txt"), ("Wszystkie pliki", "*.*")))
         if not filepaths: 
@@ -424,12 +428,30 @@ class DataVisualizerApp:
             plot_id = f"manual_{filepath}"
             if plot_id in self.plotted_data: skipped_files.append(os.path.basename(filepath)); continue
             try:
-                df = pd.read_csv(filepath, sep=r'\s+', comment='#', header=None, engine='python')
-                if not pd.api.types.is_numeric_dtype(df.iloc[:, 0]): df = df.iloc[1:]
+                df = pd.read_csv(filepath, sep=r'\s+', comment='#', header=None, skiprows=1, engine='python')
+                
+                if df.empty:
+                    logging.warning(f"Plik {os.path.basename(filepath)} jest pusty lub zawiera tylko nagłówek.")
+                    messagebox.showwarning("Pusty Plik", f"Plik {os.path.basename(filepath)} nie zawiera danych do wczytania.")
+                    continue
+
+                if df.shape[1] >= 3:
+                    df = df.iloc[:, :3]
+                elif df.shape[1] < 2:
+                     logging.warning(f"Plik {os.path.basename(filepath)} ma mniej niż 2 kolumny danych.")
+                     messagebox.showwarning("Błąd Pliku", f"Plik {os.path.basename(filepath)} ma nieprawidłową strukturę (mniej niż 2 kolumny danych).")
+                     continue
+
+                expected_columns = ['Time (ps)', 'Rad THz', 'Rad Time']
+                df.columns = expected_columns[:df.shape[1]]
+
                 df = df.apply(pd.to_numeric, errors='coerce').dropna()
-                if len(df.columns) < 2: 
-                    logging.warning(f"Plik {os.path.basename(filepath)} ma nieprawidłową strukturę i został pominięty.")
-                    messagebox.showwarning("Błąd Pliku", f"Plik {os.path.basename(filepath)} ma nieprawidłową strukturę."); continue
+
+                if df.empty:
+                    logging.warning(f"Plik {os.path.basename(filepath)} nie zawierał prawidłowych danych numerycznych.")
+                    messagebox.showwarning("Błąd Danych", f"Nie znaleziono prawidłowych danych numerycznych w pliku {os.path.basename(filepath)}.")
+                    continue
+
                 label, last_loaded_label = os.path.basename(filepath), os.path.basename(filepath)
                 logging.info(f"Wczytano pomyślnie plik '{label}' ({len(df)} punktów danych).")
                 load_index = len(self.plotted_data); initial_color = self.high_contrast_colors[load_index % len(self.high_contrast_colors)]
@@ -448,6 +470,7 @@ class DataVisualizerApp:
         if skipped_files: 
             logging.info(f"Pominięto już wczytane pliki: {skipped_files}")
             messagebox.showinfo("Pominięto pliki", "Następujące pliki zostały pominięte, ponieważ są już wczytane:\n\n" + "\n".join(skipped_files))
+
     def redraw_all_plots(self):
         self.ax.cla(); self.crosshair_v = self.ax.axvline(0, color='gray', lw=0.8, linestyle='--', visible=False); self.crosshair_h = self.ax.axhline(0, color='gray', lw=0.8, linestyle='--', visible=False); self._clear_markers()
         is_fft = self.show_fft_var.get(); sorted_plot_ids = sorted(self.plotted_data.keys())
@@ -476,6 +499,7 @@ class DataVisualizerApp:
         else:
             if self.ax.has_data(): self.ax.set_xlim(left=0); self.ax.autoscale(enable=True, axis='y')
         self.canvas.draw(); self._update_statistics_display()
+
     def normalize_amplitudes(self):
         logging.info("Rozpoczęto normalizację amplitud.")
         if self.show_fft_var.get():
