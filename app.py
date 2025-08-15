@@ -141,7 +141,7 @@ class DataVisualizerApp:
         self.scrollable_excel_frame_id = self.data_canvas.create_window((0, 0), window=self.scrollable_excel_frame, anchor="nw")
         
         self.scrollable_excel_frame.bind("<Configure>", lambda e: self._update_scroll_region(self.data_canvas))
-        self.data_canvas.bind('<Configure>', lambda e: self.data_canvas.itemconfig(self.scrollable_excel_frame_id, width=e.width))
+        self.data_canvas.bind('<Configure>', lambda e: self.data_canvas and self.data_canvas.itemconfig(self.scrollable_excel_frame_id, width=e.width))
 
         select_all_frame = ttk.Frame(self.scrollable_excel_frame)
         select_all_frame.pack(fill=tk.X, pady=(0, 5))
@@ -167,7 +167,7 @@ class DataVisualizerApp:
         chart_content_frame_id = self.chart_options_canvas.create_window((0, 0), window=chart_content_frame, anchor="nw")
 
         chart_content_frame.bind("<Configure>", lambda e: self._update_scroll_region(self.chart_options_canvas))
-        self.chart_options_canvas.bind('<Configure>', lambda e: self.chart_options_canvas.itemconfig(chart_content_frame_id, width=e.width))
+        self.chart_options_canvas.bind('<Configure>', lambda e: self.chart_options_canvas and self.chart_options_canvas.itemconfig(chart_content_frame_id, width=e.width))
 
         common_signal_frame_1 = ttk.LabelFrame(chart_content_frame, text="Aktywny Sygnał (Referencja)", padding=10)
         common_signal_frame_1.pack(side=tk.TOP, fill=tk.X, padx=10, pady=10)
@@ -181,7 +181,7 @@ class DataVisualizerApp:
         edit_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=10)
         ttk.Label(edit_frame, text="Współczynnik skalowania:").pack(fill=tk.X, pady=(5, 0)); self.scale_entry_var = tk.StringVar(value="1.0"); scale_entry = ttk.Entry(edit_frame, textvariable=self.scale_entry_var)
         scale_entry.pack(fill=tk.X, pady=(0, 5)); scale_entry.bind("<Return>", self._update_from_entry); scale_entry.bind("<FocusOut>", self._update_from_entry)
-        self.log_scale_slider = ttk.Scale(edit_frame, from_=-3.0, to=3.0, orient=tk.HORIZONTAL, command=self._update_from_slider); self.log_scale_slider.set(0); self.log_scale_slider.pack(fill=tk.X, pady=(0, 10))
+        self.log_scale_slider = ttk.Scale(edit_frame, from_=-3.0, to=3.0, orient=tk.HORIZONTAL, command=self._update_from_slider); self.log_scale_slider.set(0.0); self.log_scale_slider.pack(fill=tk.X, pady=(0, 10))
         ttk.Label(edit_frame, text="Nowa nazwa:").pack(anchor='w'); self.label_edit_var = tk.StringVar(); ttk.Entry(edit_frame, textvariable=self.label_edit_var).pack(fill=tk.X, pady=(0, 5))
         ttk.Button(edit_frame, text="Zmień etykietę", command=self._update_label).pack(fill=tk.X, pady=(0,5)); ttk.Button(edit_frame, text="Zmień kolor", command=self._change_active_plot_color).pack(fill=tk.X)
 
@@ -200,11 +200,6 @@ class DataVisualizerApp:
         width_frame = ttk.Frame(grid_frame); width_frame.pack(fill=tk.X, pady=5); ttk.Label(width_frame, text="Grubość (0.1-5.0):").pack(side=tk.LEFT)
         ttk.Spinbox(width_frame, from_=0.1, to=5.0, increment=0.1, textvariable=self.grid_width_var, command=self._update_grid, wrap=True).pack(side=tk.RIGHT, expand=True, fill=tk.X)
 
-        self.zoom_frame = ttk.LabelFrame(chart_content_frame, text="Automatyczne Skalowanie", padding=10); self.zoom_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=(0, 10))
-        self.zoom_active_var = tk.BooleanVar(value=True); ttk.Checkbutton(self.zoom_frame, text="Włącz auto-zoom na impuls", variable=self.zoom_active_var, command=self._apply_auto_zoom).pack(anchor='w')
-        ttk.Label(self.zoom_frame, text="Szerokość okna (ps):").pack(anchor='w', pady=(10, 0))
-        self.zoom_window_var = tk.StringVar(value="100"); ttk.Entry(self.zoom_frame, textvariable=self.zoom_window_var).pack(fill=tk.X)
-
         # --- Zakładka 3: Statystyka i Przetwarzanie ---
         stats_tab = ttk.Frame(notebook)
         notebook.add(stats_tab, text="Statystyka i Przetwarzanie")
@@ -219,7 +214,7 @@ class DataVisualizerApp:
         stats_content_frame_id = self.stats_canvas.create_window((0, 0), window=stats_content_frame, anchor="nw")
 
         stats_content_frame.bind("<Configure>", lambda e: self._update_scroll_region(self.stats_canvas))
-        self.stats_canvas.bind('<Configure>', lambda e: self.stats_canvas.itemconfig(stats_content_frame_id, width=e.width))
+        self.stats_canvas.bind('<Configure>', lambda e: self.stats_canvas and self.stats_canvas.itemconfig(stats_content_frame_id, width=e.width))
 
         common_signal_frame_2 = ttk.LabelFrame(stats_content_frame, text="Aktywny Sygnał (Referencja)", padding=10)
         common_signal_frame_2.pack(side=tk.TOP, fill=tk.X, padx=10, pady=10)
@@ -299,18 +294,19 @@ class DataVisualizerApp:
                 data = self.plotted_data[plot_id]
                 x_data = data['df'].iloc[:, 0].to_numpy(dtype=float); y_data = data['df'].iloc[:, 1].to_numpy(dtype=float) * data['scale_factor']; y_data = self._apply_smoothing(y_data)
                 idx1, idx2 = np.argmin(np.abs(x_data - m1_x)), np.argmin(np.abs(x_data - m2_x))
-                delta_y = abs(y_data[idx2] - y_data[idx1]); delta_y_text = f"{delta_y:,.5f} a.u."
-            text_content = f"Δt = {delta_t:,.3f} ps\nΔy = {delta_y_text}"
+                delta_y = abs(y_data[idx2] - y_data[idx1]); delta_y_text = f"{float(delta_y):,.5f} a.u."
+            text_content = f"Δt = {float(delta_t):,.3f} ps\nΔy = {delta_y_text}"
             self.marker_text = self.ax.text(0.98, 0.98, text_content, transform=self.ax.transAxes, fontsize=10, va='top', ha='right', bbox=dict(boxstyle='round,pad=0.5', fc='wheat', alpha=0.8))
     def _update_statistics_display(self):
         plot_id = self._get_plot_id_from_active_signal()
         if not plot_id or self.show_fft_var.get():
-            for var in self.stats_labels.values(): var.set("--"); return
+            for var in self.stats_labels.values(): var.set("--")
+            return
         data = self.plotted_data[plot_id]
         x_data = data['df'].iloc[:, 0].to_numpy(dtype=float); y_data = data['df'].iloc[:, 1].to_numpy(dtype=float) * data['scale_factor']; y_data = self._apply_smoothing(y_data)
         if y_data.size > 0:
             max_val, min_val, mean_val = np.max(y_data), np.min(y_data), np.mean(y_data); peak_time = x_data[np.argmax(np.abs(y_data))]
-            self.stats_labels["Max"].set(f"{max_val:.5f}"); self.stats_labels["Min"].set(f"{min_val:.5f}"); self.stats_labels["Pozycja Piku"].set(f"{peak_time:.3f} ps"); self.stats_labels["Średnia"].set(f"{mean_val:.5f}")
+            self.stats_labels["Max"].set(f"{float(max_val):.5f}"); self.stats_labels["Min"].set(f"{float(min_val):.5f}"); self.stats_labels["Pozycja Piku"].set(f"{float(peak_time):.3f} ps"); self.stats_labels["Średnia"].set(f"{float(mean_val):.5f}")
         else:
             for var in self.stats_labels.values(): var.set("--")
     def _apply_smoothing(self, y_data):
@@ -380,12 +376,12 @@ class DataVisualizerApp:
             self.initial_excel_label.pack_forget()
             for widget in self.checkbox_container.winfo_children(): widget.destroy()
             for i, sheet_name in enumerate(sheet_names):
-                var = tk.BooleanVar(value=False); self.excel_visibility_vars[sheet_name] = var
-                cb = ttk.Checkbutton(self.checkbox_container, text=sheet_name, variable=var, command=lambda sn=sheet_name: self._toggle_excel_sheet(sn))
+                var = tk.BooleanVar(value=False); self.excel_visibility_vars[str(sheet_name)] = var
+                cb = ttk.Checkbutton(self.checkbox_container, text=str(sheet_name), variable=var, command=lambda sn=sheet_name: self._toggle_excel_sheet(str(sn)))
                 cb.pack(anchor='w', fill='x', padx=5)
                 if i < 3: var.set(True)
             for i, sheet_name in enumerate(sheet_names):
-                if i < 3: self._toggle_excel_sheet(sheet_name, redraw=False)
+                if i < 3: self._toggle_excel_sheet(str(sheet_name), redraw=False)
             self._update_combobox()
             self._redraw_and_fit("Automatycznie dopasowano widok po wczytaniu arkuszy Excel.")
         except Exception as e:
@@ -495,8 +491,7 @@ class DataVisualizerApp:
             line, = self.ax.plot(line_data_x, line_data_y, label=label_text, **style_dict); data['line'] = line
         self._initialize_plot()
         if self.legend_visible_var.get() and self.ax.has_data(): self.ax.legend()
-        if not is_fft: self._apply_auto_zoom()
-        else:
+        if is_fft:
             if self.ax.has_data(): self.ax.set_xlim(left=0); self.ax.autoscale(enable=True, axis='y')
         self.canvas.draw(); self._update_statistics_display()
 
@@ -535,7 +530,7 @@ class DataVisualizerApp:
                 data['scale_factor'] = 1.0
                 continue
             max_current_amp = np.max(np.abs(current_y_raw))
-            if max_current_amp > 0: data['scale_factor'] = max_ref_amp / max_current_amp
+            if max_current_amp > 0: data['scale_factor'] = float(max_ref_amp / max_current_amp)
             else: data['scale_factor'] = 1.0
             logging.info(f"Znormalizowano '{data['label']}' z współczynnikiem {data['scale_factor']:.4f}")
         self._on_signal_selected(); self.redraw_all_plots()
@@ -562,7 +557,7 @@ class DataVisualizerApp:
         try:
             if update_entry: self.scale_entry_var.set(f"{scale_factor:.4f}")
             log_value = np.log10(scale_factor) if scale_factor > 0 else -3.0
-            self.log_scale_slider.set(max(min(log_value, 3.0), -3.0))
+            self.log_scale_slider.set(float(max(min(log_value, 3.0), -3.0)))
         except TclError: pass
         finally: self._is_updating_ui = False
     def _on_signal_selected(self, event=None):
@@ -574,7 +569,7 @@ class DataVisualizerApp:
         plot_id = self._get_plot_id_from_active_signal()
         if not plot_id: messagebox.showwarning("Brak zaznaczenia", "Proszę wybrać widoczny sygnał z listy."); return
         current_color = self.plotted_data[plot_id].get('color')
-        color_data = colorchooser.askcolor(initialcolor=current_color, title="Wybierz kolor wykresu")
+        color_data = colorchooser.askcolor(initialcolor=current_color if current_color else "#000000", title="Wybierz kolor wykresu")
         if color_data and color_data[1]: 
             logging.info(f"Zmiana koloru dla '{self.plotted_data[plot_id]['label']}' na {color_data[1]}")
             self.plotted_data[plot_id]['color'] = color_data[1]; self.redraw_all_plots()
@@ -595,31 +590,10 @@ class DataVisualizerApp:
             if visible_labels: self.active_signal_var.set(sorted_labels[0])
             else: self.active_signal_var.set('')
         self._on_signal_selected()
-    def _apply_auto_zoom(self):
-        if self.show_fft_var.get(): return
-        if not self.zoom_active_var.get(): self.fit_view_to_data(); return
-        self.toolbar.home()
-        visible_plots = [data for data in self.plotted_data.values() if data.get('visible', False)]
-        if visible_plots:
-            try:
-                main_df = visible_plots[0]['df']
-                x_data, y_data = main_df.iloc[:, 0].to_numpy(dtype=float), main_df.iloc[:, 1].to_numpy(dtype=float)
-                y_data_for_peak = self._apply_smoothing(y_data); gradient = np.abs(np.diff(y_data_for_peak)); pulse_index = np.argmax(gradient)
-                pulse_time = x_data[pulse_index]; window_width = float(self.zoom_window_var.get())
-                self.ax.set_xlim(pulse_time - window_width / 2, pulse_time + window_width / 2); self.ax.autoscale(enable=True, axis='y')
-            except (ValueError, IndexError, TypeError) as e: 
-                logging.warning(f"Automatyczny zoom nie powiódł się: {e}. Przywracanie domyślnego widoku.")
-                self.fit_view_to_data()
-        else:
-            self.fit_view_to_data()
-        self.canvas.draw_idle()
     def toggle_fft_view(self, initial_clear=False):
         is_fft = self.show_fft_var.get()
         logging.info(f"Przełączanie widoku FFT na: {is_fft}")
         new_state = 'disabled' if is_fft else 'normal'
-        for child in self.zoom_frame.winfo_children():
-            try: child.configure(state=new_state)
-            except TclError: pass
         self.fit_view_button.config(state=new_state); self.normalize_button.config(state=new_state)
         self._clear_markers(); self._update_statistics_display()
         if not initial_clear: self.redraw_all_plots()
@@ -656,7 +630,7 @@ class DataVisualizerApp:
             visible_lines = [data['line'] for data in self.plotted_data.values() if data.get('visible') and data.get('line')]
             if not visible_lines: return
             logging.info("Dopasowywanie widoku do danych.")
-            self.zoom_active_var.set(False); min_x, max_x, min_y, max_y = np.inf, -np.inf, np.inf, -np.inf
+            min_x, max_x, min_y, max_y = np.inf, -np.inf, np.inf, -np.inf
             for line in visible_lines:
                 x_data, y_data = line.get_xdata(), line.get_ydata()
                 if x_data.size > 0: min_x, max_x = min(min_x, np.min(x_data)), max(max_x, np.max(x_data))
@@ -664,7 +638,7 @@ class DataVisualizerApp:
             if np.isinf(min_x) or np.isinf(min_y): return
             y_margin = (max_y - min_y) * 0.05
             if y_margin == 0: y_margin = 1
-            self.ax.set_xlim(min_x, max_x); self.ax.set_ylim(min_y - y_margin, max_y + y_margin)
+            self.ax.set_xlim(float(min_x), float(max_x)); self.ax.set_ylim(float(min_y - y_margin), float(max_y + y_margin))
             self.canvas.draw_idle()
         except Exception as e:
             logging.error(f"Błąd podczas dopasowywania widoku do danych: {e}", exc_info=True)

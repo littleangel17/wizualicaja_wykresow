@@ -26,7 +26,6 @@ Narzędzia do personalizacji i manipulacji wizualizacją.
 - **Wybór aktywnego sygnału**: Lista rozwijana (ComboBox) pozwala na wybór jednego sygnału, który staje się referencją dla operacji analitycznych i edycyjnych.
 - **Skalowanie i edycja**: Możliwość mnożenia amplitudy sygnału przez dowolny współczynnik, zmiana etykiety (legendy) oraz koloru linii.
 - **Konfiguracja wizualna**: Pełna kontrola nad widocznością legendy oraz siatki pomocniczej (kolor, styl, grubość linii).
-- **Automatyczny zoom**: Funkcja `Włącz auto-zoom na impuls` automatycznie centruje widok na głównym impulsie terahercowym, identyfikując obszar o największej zmianie sygnału.
 
 ### 2.3. Zakładka: Statystyka i Przetwarzanie
 
