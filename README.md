@@ -1,10 +1,10 @@
 [![AI Assisted](https://img.shields.io/badge/AI-Assisted-blue?style=for-the-badge&logo=openai)](./AI_POLICY.md) [![Built with Gemini](https://img.shields.io/badge/Built%20with-Gemini-4285F4?style=for-the-badge&logo=google-gemini)](https://gemini.google.com/)
 
-# THz Data Visualizer v9.2
+# DaVisu_THz v9.2
 
 ## 1. Wprowadzenie
 
-**THz Data Visualizer** to zaawansowana aplikacja desktopowa napisana w języku Python, wykorzystująca biblioteki Tkinter i Matplotlib. Została zaprojektowana specjalnie do interaktywnej wizualizacji, analizy i przetwarzania danych dwuwymiarowych, z głównym przeznaczeniem dla wyników eksperymentów spektroskopii w dziedzinie czasu (Time-Domain Spectroscopy), w szczególności spektroskopii terahercowej (THz-TDS).
+**DaVisu_THz** (THz Data Visualizer) to zaawansowana aplikacja desktopowa napisana w języku Python, wykorzystująca biblioteki Tkinter i Matplotlib. Została zaprojektowana specjalnie do interaktywnej wizualizacji, analizy i przetwarzania danych dwuwymiarowych, z głównym przeznaczeniem dla wyników eksperymentów spektroskopii w dziedzinie czasu (Time-Domain Spectroscopy), w szczególności spektroskopii terahercowej (THz-TDS).
 
 Aplikacja umożliwia użytkownikom płynne badanie sygnałów w domenie czasu, przeprowadzanie szybkiej transformacji Fouriera (FFT) w celu analizy spektralnej, a także stosowanie zaawansowanych technik cyfrowego przetwarzania sygnałów w celu redukcji szumów i ekstrakcji kluczowych parametrów fizycznych. Dzięki wbudowanemu systemowi historii operacji (Undo/Redo), analiza staje się elastyczna i bezpieczna.
 
