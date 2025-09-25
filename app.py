@@ -69,7 +69,7 @@ class DataVisualizerApp:
     def __init__(self, root: tk.Tk):
         self.root = root
         self._setup_logging()
-        self.root.title("THz Data Visualizer v9.2")
+        self.root.title("DaVisu v9.2")
         self.root.geometry("1450x900")
 
         self.style = ttk.Style(self.root)
